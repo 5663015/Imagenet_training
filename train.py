@@ -92,11 +92,6 @@ def main():
 	
 	# model
 	model = get_timm_models(args.model, dropout=args.dropout, drop_connect=args.drop_connect, bn_momentum=args.bn_momentum)
-		
-	# flops, params
-	input = torch.randn(1, 3, 224, 224).cuda()
-	flops, params = profile(model, inputs=(input,), verbose=False)
-	print('{} model, params: {}M, flops: {}M'.format(args.model, params / 1e6, flops / 1e6))
 	
 	# optimizer
 	# optimizer = torch.optim.SGD(model.parameters(), args.learning_rate, momentum=args.momentum, weight_decay=args.weight_decay)
@@ -112,6 +107,11 @@ def main():
 		model = nn.DataParallel(model, device_ids=[0, 1, 2, 3]).cuda()
 	else:
 		model = model.cuda()
+		
+	# flops, params
+	input = torch.randn(1, 3, 224, 224).cuda()
+	flops, params = profile(model, inputs=(input,), verbose=False)
+	print('{} model, params: {}M, flops: {}M'.format(args.model, params / 1e6, flops / 1e6))
 	
 	if args.warm_up_epochs > 0:
 		warm_scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda t: t / args.warm_up_epochs)
