@@ -99,12 +99,8 @@ def main():
 	print('{} model, params: {}M, flops: {}M'.format(args.model, params / 1e6, flops / 1e6))
 	
 	# optimizer
-	optimizer = torch.optim.SGD(
-		model.parameters(),
-		args.learning_rate,
-		momentum=args.momentum,
-		weight_decay=args.weight_decay
-	)
+	# optimizer = torch.optim.SGD(model.parameters(), args.learning_rate, momentum=args.momentum, weight_decay=args.weight_decay)
+	optimizer = torch.optim.RMSprop(model.parameters(), args.learning_rate, weight_decay=args.weight_decay, momentum=args.momentum, centered=False)
 	scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, args.epochs, eta_min=args.learning_rate_min)
 	
 	# Use NVIDIA's apex
