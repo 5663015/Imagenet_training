@@ -36,6 +36,10 @@ def get_args():
 	parser.add_argument('--seed', type=int, default=0, help='random seed')
 	parser.add_argument('--label_smooth', type=float, default=0.1, help='label smoothing')
 	parser.add_argument('--grad_clip', type=float, default=5., help='gradient clipping')
+	parser.add_argument('--warm_up_epochs', default=5, type=int, metavar='N', help='manual epoch number (useful on restarts)')
+	parser.add_argument('--gamma', type=float, default=0.97, help='learning rate decay')
+	parser.add_argument('--decay_period', type=int, default=3, help='epochs between two learning rate decays')
+	parser.add_argument('--bn_momentum', type=float, default=0.9, help='BatchNorm momentum override (if not None)')
 	args = parser.parse_args()
 	return args
 	
@@ -87,7 +91,7 @@ def main():
 	criterion_smooth = criterion_smooth.cuda()
 	
 	# model
-	model = get_timm_models(args.model, dropout=args.dropout, drop_connect=args.drop_connect)
+	model = get_timm_models(args.model, dropout=args.dropout, drop_connect=args.drop_connect, bn_momentum=args.bn_momentum)
 	if args.parallel:
 		model = nn.DataParallel(model, device_ids=[0, 1, 2, 3]).cuda()
 	else:
@@ -101,10 +105,17 @@ def main():
 	# optimizer
 	# optimizer = torch.optim.SGD(model.parameters(), args.learning_rate, momentum=args.momentum, weight_decay=args.weight_decay)
 	optimizer = torch.optim.RMSprop(model.parameters(), args.learning_rate, weight_decay=args.weight_decay, momentum=args.momentum, centered=False)
-	scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, args.epochs, eta_min=args.learning_rate_min)
+	# scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, args.epochs, eta_min=args.learning_rate_min)
+	scheduler = torch.optim.lr_scheduler.StepLR(optimizer, args.decay_period, gamma=args.gamma)
 	
 	# Use NVIDIA's apex
 	model, optimizer = amp.initialize(model, optimizer)
+	
+	if args.warm_up_epochs > 0:
+		warm_scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda t: t / args.warm_up_epochs)
+		for epoch in range(args.warm_up_epochs):
+			train(args, epoch, train_queue, model, criterion, optimizer)
+			warm_scheduler.step()
 	
 	# train
 	best_acc = 0.
