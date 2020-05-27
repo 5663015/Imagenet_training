@@ -87,7 +87,7 @@ def main():
 	criterion_smooth = criterion_smooth.cuda()
 	
 	# model
-	model = get_timm_models(args.model, dropout=args.dropouy, drop_connect=args.drop_connect)
+	model = get_timm_models(args.model, dropout=args.dropout, drop_connect=args.drop_connect)
 	if args.parallel:
 		model = nn.DataParallel(model, device_ids=[0, 1, 2, 3]).cuda()
 	else:
