@@ -176,9 +176,9 @@ def train(args, epoch, train_queue, model, criterion, optimizer):
 		
 		prec1, prec5 = accuracy(logits, target, topk=(1, 5))
 		n = input.size(0)
-		objs.update(loss.data[0], n)
-		top1.update(prec1.data[0], n)
-		top5.update(prec5.data[0], n)
+		objs.update(loss.item(), n)
+		top1.update(prec1.item(), n)
+		top5.update(prec5.item(), n)
 		
 		print('\rEpoch: {}/{}, step[{}/{}], train loss: {:.6}, train top1: {:.6}, train top5: {:.6}'.format(
 			epoch + 1, args.epochs, step + 1, len(train_queue), objs.avg, top1.avg, top5.avg), end='')
@@ -200,9 +200,9 @@ def infer(valid_queue, model, criterion):
 		
 		prec1, prec5 = accuracy(logits, target, topk=(1, 5))
 		n = input.size(0)
-		objs.update(loss.data[0], n)
-		top1.update(prec1.data[0], n)
-		top5.update(prec5.data[0], n)
+		objs.update(loss.item(), n)
+		top1.update(prec1.item(), n)
+		top5.update(prec5.item(), n)
 	
 	return top1.avg, top5.avg, objs.avg
 	
