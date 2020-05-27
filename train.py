@@ -49,8 +49,8 @@ def main():
 	args = get_args()
 	print(args)
 	
+	device = torch.device("cuda")
 	np.random.seed(args.seed)
-	torch.cuda.set_device(args.gpu)
 	cudnn.benchmark = True
 	torch.manual_seed(args.seed)
 	cudnn.enabled = True
@@ -92,10 +92,6 @@ def main():
 	
 	# model
 	model = get_timm_models(args.model, dropout=args.dropout, drop_connect=args.drop_connect, bn_momentum=args.bn_momentum)
-	if args.parallel:
-		model = nn.DataParallel(model, device_ids=[0, 1, 2, 3]).cuda()
-	else:
-		model = model.cuda()
 		
 	# flops, params
 	input = torch.randn(1, 3, 224, 224).cuda()
@@ -110,6 +106,12 @@ def main():
 	
 	# Use NVIDIA's apex
 	model, optimizer = amp.initialize(model, optimizer)
+	model = model.to(device)
+	
+	if args.parallel:
+		model = nn.DataParallel(model, device_ids=[0, 1, 2, 3]).cuda()
+	else:
+		model = model.cuda()
 	
 	if args.warm_up_epochs > 0:
 		warm_scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda t: t / args.warm_up_epochs)
