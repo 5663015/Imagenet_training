@@ -20,7 +20,7 @@ from utils import *
 def get_args():
 	parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
 	parser.add_argument('--data', type=str, default='../data/imagenet/', help='path to dataset')
-	parser.add_argument('--batch_size', type=int, default=1024, help='batch size')
+	parser.add_argument('--batch_size', type=int, default=512, help='batch size')
 	parser.add_argument('--model', type=str, required=True, help='model name')
 	parser.add_argument('--learning_rate', type=float, default=0.1, help='init learning rate')
 	parser.add_argument('--learning_rate_min', type=float, default=0., help='min learning rate')
@@ -29,7 +29,7 @@ def get_args():
 	parser.add_argument('--gpu', type=int, default=0, help='gpu device id')
 	parser.add_argument('--parallel', action='store_true', default=False, help='data parallelism')
 	parser.add_argument('--classes', type=int, default=1000, help='number of classes')
-	parser.add_argument('--epochs', type=int, default=120, help='num of training epochs')
+	parser.add_argument('--epochs', type=int, default=100, help='num of training epochs')
 	parser.add_argument('--dropout', type=float, default=0.2, help='drop path probability')
 	parser.add_argument('--drop_connect', type=float, default=0.2, help='drop path probability')
 	parser.add_argument('--exp_name', type=str, default='train', help='experiment name')
@@ -49,7 +49,7 @@ def main():
 	args = get_args()
 	print(args)
 	
-	device = torch.device("cuda")
+	device = torch.device(args.gpu)
 	np.random.seed(args.seed)
 	cudnn.benchmark = True
 	torch.manual_seed(args.seed)
@@ -101,13 +101,12 @@ def main():
 	
 	# optimizer
 	optimizer = torch.optim.SGD(model.parameters(), args.learning_rate, momentum=args.momentum, weight_decay=args.weight_decay)
+	scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, args.epochs, eta_min=args.learning_rate_min)
 	# optimizer = torch.optim.RMSprop(model.parameters(), args.learning_rate, weight_decay=args.weight_decay, momentum=args.momentum, centered=False)
-	# scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, args.epochs, eta_min=args.learning_rate_min)
-	scheduler = torch.optim.lr_scheduler.StepLR(optimizer, args.decay_period, gamma=args.gamma)
+	# scheduler = torch.optim.lr_scheduler.StepLR(optimizer, args.decay_period, gamma=args.gamma)
 	
 	# Use NVIDIA's apex
-	model, optimizer = amp.initialize(model, optimizer)
-	
+	# model, optimizer = amp.initialize(model, optimizer)
 	
 	if args.parallel:
 		model = nn.DataParallel(model, device_ids=[0, 1, 2, 3, 4, 5, 6, 7]).cuda()
@@ -126,11 +125,11 @@ def main():
 	val_top1_list, val_top5_list, val_loss_list = [], [], []
 	for epoch in range(args.epochs):
 		time1 = time.time()
-		scheduler.step()
-		model.drop_path_prob = args.drop_connect * epoch / args.epochs
 		
-		train_top1, train_top5, train_loss = train(args, epoch, train_queue, model, criterion_smooth, optimizer)
-		valid_acc_top1, valid_acc_top5, valid_obj = infer(valid_queue, model, criterion)
+		model.drop_path_prob = args.drop_connect * epoch / args.epochs
+		train_top1, train_top5, train_loss = train(args, epoch, device, train_queue, model, criterion_smooth, optimizer)
+		valid_acc_top1, valid_acc_top5, valid_obj = infer(device, valid_queue, model, criterion)
+		scheduler.step()
 		
 		if valid_acc_top1 > best_acc:
 			best_acc = valid_acc_top1
@@ -166,25 +165,22 @@ def main():
 	torch.save(state, path)
 
 
-def train(args, epoch, train_queue, model, criterion, optimizer):
+def train(args, epoch, device, train_queue, model, criterion, optimizer):
 	objs = AverageMeter()
 	top1 = AverageMeter()
 	top5 = AverageMeter()
 	model.train()
 
 	for step, (input, target) in enumerate(train_queue):
-		target = target.cuda(async=True)
-		input = input.cuda()
-		input = Variable(input)
-		target = Variable(target)
+		inputs, targets = inputs.to(device), targets.to(device)
 		
 		optimizer.zero_grad()
 		logits = model(input)
 		loss = criterion(logits, target)
 		
-		# loss.backward()
-		with amp.scale_loss(loss, optimizer) as scaled_loss:
-			scaled_loss.backward()
+		loss.backward()
+		# with amp.scale_loss(loss, optimizer) as scaled_loss:
+		# 	scaled_loss.backward()
 		nn.utils.clip_grad_norm(model.parameters(), args.grad_clip)
 		optimizer.step()
 		
@@ -199,15 +195,14 @@ def train(args, epoch, train_queue, model, criterion, optimizer):
 	return top1.avg, top5.avg, objs.avg
 	
 
-def infer(valid_queue, model, criterion):
+def infer(device, valid_queue, model, criterion):
 	objs = AverageMeter()
 	top1 = AverageMeter()
 	top5 = AverageMeter()
 	model.eval()
 	
 	for step, (input, target) in enumerate(valid_queue):
-		input = Variable(input, volatile=True).cuda()
-		target = Variable(target, volatile=True).cuda(async=True)
+		inputs, targets = inputs.to(device), targets.to(device)
 		
 		logits = model(input)
 		loss = criterion(logits, target)
