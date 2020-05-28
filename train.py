@@ -30,6 +30,7 @@ def get_args():
 	parser.add_argument('--parallel', action='store_true', default=False, help='data parallelism')
 	parser.add_argument('--classes', type=int, default=1000, help='number of classes')
 	parser.add_argument('--epochs', type=int, default=100, help='num of training epochs')
+	parser.add_argument('--val_freq', type=int, default=5, help='frequence of reporting val acc')
 	parser.add_argument('--dropout', type=float, default=0.2, help='drop path probability')
 	parser.add_argument('--drop_connect', type=float, default=0.2, help='drop path probability')
 	parser.add_argument('--exp_name', type=str, default='train', help='experiment name')
@@ -47,8 +48,6 @@ def get_args():
 class DataLoaderX(DataLoader):
 	def __iter__(self):
 		return BackgroundGenerator(super().__iter__())
-
-
 
 
 def main():
@@ -136,7 +135,7 @@ def main():
 		val_loss_list.append(valid_obj)
 		
 		time2 = time.time()
-		print(' val loss: {:.3}, val acc: {:.6}, best val acc: \033[31m{:.6}\033[0m, time/minutes: {:.3}'.format(valid_obj, valid_acc_top1, best_acc, (time2 - time1) / 60))
+		print(' val loss: {:.3}, val acc: {:.3}, best val acc: \033[31m{:.3}\033[0m, time/minutes: {:.3}'.format(valid_obj, valid_acc_top1, best_acc, (time2 - time1) / 60))
 	
 	# save training process
 	state = {
@@ -178,7 +177,7 @@ def train(args, epoch, device, train_queue, model, criterion, optimizer):
 		top1.update(prec1.item(), n)
 		top5.update(prec5.item(), n)
 		
-		print('\rEpoch: {}/{}, step[{}/{}], train loss: {:.6}, train top1: {:.6}, train top5: {:.6}'.format(
+		print('\rEpoch: {}/{}, step[{}/{}], train loss: {:.3}, train top1: {:.3}, train top5: {:.3}'.format(
 			epoch + 1, args.epochs, step + 1, len(train_queue), objs.avg, top1.avg, top5.avg), end='')
 		step += 1
 	return top1.avg, top5.avg, objs.avg
