@@ -109,7 +109,7 @@ def main():
 	# model, optimizer = amp.initialize(model, optimizer)
 	
 	if args.parallel:
-		model = nn.DataParallel(model, device_ids=[0, 1, 2, 3, 4, 5, 6, 7]).cuda()
+		model = nn.DataParallel(model, device_ids=[4, 5, 6, 7]).cuda()
 	else:
 		model = model.cuda()
 	
