@@ -70,3 +70,7 @@ class Cutout(object):
 		return img
 
 
+
+
+
+

@@ -79,10 +79,10 @@ def main():
 	
 	# data queue
 	train_queue = torch.utils.data.DataLoader(
-		train_data, batch_size=args.batch_size, shuffle=True, pin_memory=True, num_workers=4)
+		train_data, batch_size=args.batch_size, shuffle=True, pin_memory=True, num_workers=32)
 	
 	valid_queue = torch.utils.data.DataLoader(
-		valid_data, batch_size=args.batch_size, shuffle=False, pin_memory=True, num_workers=4)
+		valid_data, batch_size=args.batch_size, shuffle=False, pin_memory=True, num_workers=32)
 	
 	# criterion
 	criterion = nn.CrossEntropyLoss()
@@ -108,8 +108,8 @@ def main():
 	# Use NVIDIA's apex
 	# model, optimizer = amp.initialize(model, optimizer)
 	
-	if args.parallel:
-		model = nn.DataParallel(model, device_ids=[4, 5, 6, 7]).cuda()
+	# if args.parallel:
+	# 	model = nn.DataParallel(model, device_ids=[4, 5, 6, 7]).cuda()
 	
 	if args.warm_up_epochs > 0:
 		warm_scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda t: t / args.warm_up_epochs)
