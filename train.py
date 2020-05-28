@@ -151,7 +151,7 @@ def main():
 		val_loss_list.append(valid_obj)
 		
 		time2 = time.time()
-		print('val loss: {:.6}, val acc: {:.6}, best val acc: \033[31m{:.6}\033[0m, time/minutes: {:.3}\n'.format(valid_obj, valid_acc_top1, best_acc, (time2 - time1) / 60))
+		print(' val loss: {:.3}, val acc: {:.6}, best val acc: \033[31m{:.6}\033[0m, time/minutes: {:.3}\n'.format(valid_obj, valid_acc_top1, best_acc, (time2 - time1) / 60))
 	
 	# save training process
 	state = {
@@ -192,13 +192,8 @@ def train(args, epoch, device, train_queue, model, criterion, optimizer):
 		top5.update(prec5.item(), n)
 		
 		
-		# print('\rEpoch: {}/{}, step[{}/{}], train loss: {:.6}, train top1: {:.6}, train top5: {:.6}'.format(
-		# 	epoch + 1, args.epochs, step + 1, len(train_queue), objs.avg, top1.avg, top5.avg), end='')
-		if step % 1 == 0:
-			print('Epoch: {}/{}, step[{}/{}], train loss: {:.6}, train top1: {:.6}, train top5: {:.6}'.format(
-				epoch + 1, args.epochs, step + 1, len(train_queue), objs.avg, top1.avg, top5.avg))
-		if step == 10:
-			break
+		print('\rEpoch: {}/{}, step[{}/{}], train loss: {:.6}, train top1: {:.6}, train top5: {:.6}'.format(
+			epoch + 1, args.epochs, step + 1, len(train_queue), objs.avg, top1.avg, top5.avg), end='')
 	return top1.avg, top5.avg, objs.avg
 	
 
