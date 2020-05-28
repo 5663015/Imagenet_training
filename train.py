@@ -51,12 +51,13 @@ def main():
 	args = get_args()
 	print(args)
 	
-	device = torch.device(args.gpu)
+	torch.cuda.set_device(args.gpu)
 	np.random.seed(args.seed)
 	cudnn.benchmark = True
 	torch.manual_seed(args.seed)
 	cudnn.enabled = True
 	torch.cuda.manual_seed(args.seed)
+	device = torch.device('cuda')
 	
 	# train dataset
 	train_transform = transforms.Compose([
@@ -127,6 +128,7 @@ def main():
 		time1 = time.time()
 		
 		model.drop_path_prob = args.drop_connect * epoch / args.epochs
+		model.drop_rate = args.dropout * epoch / args.epochs
 		train_top1, train_top5, train_loss = train(args, epoch, device, train_queue, model, criterion_smooth, optimizer)
 		valid_acc_top1, valid_acc_top5, valid_obj = infer(device, valid_queue, model, criterion)
 		scheduler.step()
@@ -149,6 +151,7 @@ def main():
 		val_loss_list.append(valid_obj)
 		
 		time2 = time.time()
+		print(valid_obj, valid_acc_top1)
 		print(' val loss: {:.6}, val acc: {:.6}, time/minutes: {:.3}\n'.format(valid_obj, valid_acc_top1, (time2 - time1) / 60))
 		print('best val acc: ', best_acc)
 	
