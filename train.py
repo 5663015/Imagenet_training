@@ -22,7 +22,7 @@ warnings.filterwarnings("ignore")
 def get_args():
 	parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
 	parser.add_argument('--data', type=str, default='../data/imagenet/', help='path to dataset')
-	parser.add_argument('--batch_size', type=int, default=512, help='batch size')
+	parser.add_argument('--batch_size', type=int, default=256, help='batch size')
 	parser.add_argument('--model', type=str, required=True, help='model name')
 	parser.add_argument('--learning_rate', type=float, default=0.1, help='init learning rate')
 	parser.add_argument('--learning_rate_min', type=float, default=0., help='min learning rate')
@@ -151,9 +151,7 @@ def main():
 		val_loss_list.append(valid_obj)
 		
 		time2 = time.time()
-		print(valid_obj, valid_acc_top1)
-		print(' val loss: {:.6}, val acc: {:.6}, time/minutes: {:.3}\n'.format(valid_obj, valid_acc_top1, (time2 - time1) / 60))
-		print('best val acc: ', best_acc)
+		print('val loss: {:.6}, val acc: {:.6}, best val acc: \033[31m{:.6}\033[0m, time/minutes: {:.3}\n'.format(valid_obj, valid_acc_top1, best_acc, (time2 - time1) / 60))
 	
 	# save training process
 	state = {
@@ -193,8 +191,12 @@ def train(args, epoch, device, train_queue, model, criterion, optimizer):
 		top1.update(prec1.item(), n)
 		top5.update(prec5.item(), n)
 		
-		print('\rEpoch: {}/{}, step[{}/{}], train loss: {:.6}, train top1: {:.6}, train top5: {:.6}'.format(
-			epoch + 1, args.epochs, step + 1, len(train_queue), objs.avg, top1.avg, top5.avg), end='')
+		
+		# print('\rEpoch: {}/{}, step[{}/{}], train loss: {:.6}, train top1: {:.6}, train top5: {:.6}'.format(
+		# 	epoch + 1, args.epochs, step + 1, len(train_queue), objs.avg, top1.avg, top5.avg), end='')
+		if step % 1 == 0:
+			print('Epoch: {}/{}, step[{}/{}], train loss: {:.6}, train top1: {:.6}, train top5: {:.6}'.format(
+				epoch + 1, args.epochs, step + 1, len(train_queue), objs.avg, top1.avg, top5.avg))
 		if step == 10:
 			break
 	return top1.avg, top5.avg, objs.avg
