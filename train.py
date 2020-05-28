@@ -110,8 +110,6 @@ def main():
 	
 	if args.parallel:
 		model = nn.DataParallel(model, device_ids=[4, 5, 6, 7]).cuda()
-	else:
-		model = model.cuda()
 	
 	if args.warm_up_epochs > 0:
 		warm_scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda t: t / args.warm_up_epochs)
