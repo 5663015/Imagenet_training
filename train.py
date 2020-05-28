@@ -116,7 +116,7 @@ def main():
 	if args.warm_up_epochs > 0:
 		warm_scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda t: t / args.warm_up_epochs)
 		for epoch in range(args.warm_up_epochs):
-			train(args, epoch, train_queue, model, criterion, optimizer)
+			train(args, epoch, device, train_queue, model, criterion, optimizer)
 			warm_scheduler.step()
 	
 	# train
