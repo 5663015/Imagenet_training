@@ -6,6 +6,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.backends.cudnn as cudnn
+from torch.utils.data import DataLoader
+from prefetch_generator import BackgroundGenerator
 import torchvision.utils
 from torchvision import datasets
 from thop import profile
@@ -41,7 +43,13 @@ def get_args():
 	args = parser.parse_args()
 	return args
 	
-	
+
+class DataLoaderX(DataLoader):
+	def __iter__(self):
+		return BackgroundGenerator(super().__iter__())
+
+
+
 
 def main():
 	args = get_args()
@@ -68,6 +76,7 @@ def main():
 	
 	valid_queue = torch.utils.data.DataLoader(
 		valid_data, batch_size=args.batch_size, shuffle=False, pin_memory=True, num_workers=32)
+	train_queue, valid_queue = DataLoaderX(train_queue), DataLoaderX(valid_queue)
 	
 	# criterion
 	criterion = nn.CrossEntropyLoss()
