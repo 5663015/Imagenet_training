@@ -38,7 +38,7 @@ def get_args():
 	parser.add_argument('--seed', type=int, default=0, help='random seed')
 	parser.add_argument('--label_smooth', type=float, default=0.1, help='label smoothing')
 	parser.add_argument('--grad_clip', type=float, default=5., help='gradient clipping')
-	parser.add_argument('--warm_up_epochs', default=5, type=int, metavar='N', help='manual epoch number (useful on restarts)')
+	parser.add_argument('--warm_up_epochs', default=0, type=int, metavar='N', help='manual epoch number (useful on restarts)')
 	parser.add_argument('--gamma', type=float, default=0.97, help='learning rate decay')
 	parser.add_argument('--decay_period', type=int, default=3, help='epochs between two learning rate decays')
 	parser.add_argument('--bn_momentum', type=float, default=0.9, help='BatchNorm momentum override (if not None)')
@@ -208,17 +208,18 @@ def infer(device, valid_queue, model, criterion):
 	top5 = AverageMeter()
 	model.eval()
 	
-	for step, (input, target) in enumerate(valid_queue):
-		input, target = input.to(device), target.to(device)
-		
-		logits = model(input)
-		loss = criterion(logits, target)
-		
-		prec1, prec5 = accuracy(logits, target, topk=(1, 5))
-		n = input.size(0)
-		objs.update(loss.item(), n)
-		top1.update(prec1.item(), n)
-		top5.update(prec5.item(), n)
+	with torch.no_grad():
+		for step, (input, target) in enumerate(valid_queue):
+			input, target = input.to(device), target.to(device)
+			
+			logits = model(input)
+			loss = criterion(logits, target)
+			
+			prec1, prec5 = accuracy(logits, target, topk=(1, 5))
+			n = input.size(0)
+			objs.update(loss.item(), n)
+			top1.update(prec1.item(), n)
+			top5.update(prec5.item(), n)
 	
 	return top1.avg, top5.avg, objs.avg
 	
