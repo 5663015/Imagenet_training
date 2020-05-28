@@ -6,14 +6,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.backends.cudnn as cudnn
-from torch.autograd import Variable
 import torchvision.utils
 from torchvision import datasets
-import torchvision.transforms as transforms
 from thop import profile
 from timm_models import get_timm_models
-from sklearn import metrics
-from auto_augment import ImageNetPolicy
 from utils import *
 import warnings
 warnings.filterwarnings("ignore")
@@ -59,25 +55,9 @@ def main():
 	torch.cuda.manual_seed(args.seed)
 	device = torch.device('cuda')
 	
-	# train dataset
-	train_transform = transforms.Compose([
-		transforms.RandomResizedCrop(224),
-		transforms.RandomHorizontalFlip(),
-		ImageNetPolicy(),
-		transforms.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.4, hue=0.2),
-        transforms.ToTensor(),
-		transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-		Cutout(16)
-    ])
+	# dataset
+	train_transform, val_transform = Imagenet_transforms()
 	train_data = datasets.ImageFolder(root='/home/work/dataset/ILSVRC2012/train', transform=train_transform)
-	
-	# val dataset
-	val_transform = transforms.Compose([
-		transforms.Resize(256),
-		transforms.CenterCrop(224),
-		transforms.ToTensor(),
-		transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-		])
 	valid_data = datasets.ImageFolder(root='/home/work/dataset/ILSVRC2012/train', transform=val_transform)
 	
 	# data queue
@@ -107,12 +87,6 @@ def main():
 	scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, args.epochs, eta_min=args.learning_rate_min)
 	# optimizer = torch.optim.RMSprop(model.parameters(), args.learning_rate, weight_decay=args.weight_decay, momentum=args.momentum, centered=False)
 	# scheduler = torch.optim.lr_scheduler.StepLR(optimizer, args.decay_period, gamma=args.gamma)
-	
-	# Use NVIDIA's apex
-	# model, optimizer = amp.initialize(model, optimizer)
-	
-	# if args.parallel:
-	# 	model = nn.DataParallel(model, device_ids=[4, 5, 6, 7]).cuda()
 	
 	if args.warm_up_epochs > 0:
 		warm_scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda t: t / args.warm_up_epochs)
@@ -172,16 +146,18 @@ def train(args, epoch, device, train_queue, model, criterion, optimizer):
 	top5 = AverageMeter()
 	model.train()
 
-	for step, (input, target) in enumerate(train_queue):
-		input, target = input.to(device), target.to(device)
-		
+	# for step, (input, target) in enumerate(train_queue):
+	# 	input, target = input.to(device), target.to(device)
+	
+	prefetcher = data_prefetcher(train_queue)
+	input, target = prefetcher.next()
+	step = 0
+	while input is not None:
 		optimizer.zero_grad()
 		logits = model(input)
 		loss = criterion(logits, target)
 		
 		loss.backward()
-		# with amp.scale_loss(loss, optimizer) as scaled_loss:
-		# 	scaled_loss.backward()
 		nn.utils.clip_grad_norm(model.parameters(), args.grad_clip)
 		optimizer.step()
 		
@@ -191,9 +167,9 @@ def train(args, epoch, device, train_queue, model, criterion, optimizer):
 		top1.update(prec1.item(), n)
 		top5.update(prec5.item(), n)
 		
-		
 		print('\rEpoch: {}/{}, step[{}/{}], train loss: {:.6}, train top1: {:.6}, train top5: {:.6}'.format(
 			epoch + 1, args.epochs, step + 1, len(train_queue), objs.avg, top1.avg, top5.avg), end='')
+		step += 1
 	return top1.avg, top5.avg, objs.avg
 	
 
