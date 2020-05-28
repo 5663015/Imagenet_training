@@ -157,13 +157,13 @@ def train(args, epoch, device, train_queue, model, criterion, optimizer):
 	top5 = AverageMeter()
 	model.train()
 
-	# for step, (input, target) in enumerate(train_queue):
-	# 	input, target = input.to(device), target.to(device)
+	for step, (input, target) in enumerate(train_queue):
+		input, target = input.to(device), target.to(device)
 	
-	prefetcher = data_prefetcher(train_queue)
-	input, target = prefetcher.next()
-	step = 0
-	while step < len(train_queue):
+	# prefetcher = data_prefetcher(train_queue)
+	# input, target = prefetcher.next()
+	# step = 0
+	# while step < len(train_queue):
 		optimizer.zero_grad()
 		logits = model(input)
 		loss = criterion(logits, target)
