@@ -127,7 +127,7 @@ def main():
 		val_loss_list.append(valid_obj)
 		
 		time2 = time.time()
-		print(' val loss: {:.3}, val acc: {:.6}, best val acc: \033[31m{:.6}\033[0m, time/minutes: {:.3}\n'.format(valid_obj, valid_acc_top1, best_acc, (time2 - time1) / 60))
+		print(' val loss: {:.3}, val acc: {:.6}, best val acc: \033[31m{:.6}\033[0m, time/minutes: {:.3}'.format(valid_obj, valid_acc_top1, best_acc, (time2 - time1) / 60))
 	
 	# save training process
 	state = {
@@ -154,7 +154,7 @@ def train(args, epoch, device, train_queue, model, criterion, optimizer):
 	prefetcher = data_prefetcher(train_queue)
 	input, target = prefetcher.next()
 	step = 0
-	while input is not None:
+	while step < len(train_queue):
 		optimizer.zero_grad()
 		logits = model(input)
 		loss = criterion(logits, target)
