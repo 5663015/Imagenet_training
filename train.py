@@ -149,7 +149,7 @@ def main():
 		val_loss_list.append(valid_obj)
 		
 		time2 = time.time()
-		print(' val loss: {:.6}, val acc: {:.6}, time: {:.3}'.format(valid_obj, valid_acc_top1, time2 - time1))
+		print(' val loss: {:.6}, val acc: {:.6}, time/minutes: {:.3}'.format(valid_obj, valid_acc_top1, (time2 - time1) / 60))
 		print('best val acc: ', best_acc)
 	
 	# save training process
@@ -192,6 +192,8 @@ def train(args, epoch, device, train_queue, model, criterion, optimizer):
 		
 		print('\rEpoch: {}/{}, step[{}/{}], train loss: {:.6}, train top1: {:.6}, train top5: {:.6}'.format(
 			epoch + 1, args.epochs, step + 1, len(train_queue), objs.avg, top1.avg, top5.avg), end='')
+		if step == 10:
+			break
 	return top1.avg, top5.avg, objs.avg
 	
 
