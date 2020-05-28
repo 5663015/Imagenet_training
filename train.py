@@ -71,12 +71,12 @@ def main():
 	valid_data = datasets.ImageFolder(root='/home/work/dataset/ILSVRC2012/train', transform=val_transform)
 	
 	# data queue
-	train_queue = torch.utils.data.DataLoader(
-		train_data, batch_size=args.batch_size, shuffle=True, pin_memory=True, num_workers=32)
-	
-	valid_queue = torch.utils.data.DataLoader(
-		valid_data, batch_size=args.batch_size, shuffle=False, pin_memory=True, num_workers=32)
-	train_queue, valid_queue = DataLoaderX(train_queue), DataLoaderX(valid_queue)
+	# train_queue = torch.utils.data.DataLoader(
+	# 	train_data, batch_size=args.batch_size, shuffle=True, pin_memory=True, num_workers=32)
+	# valid_queue = torch.utils.data.DataLoader(
+	# 	valid_data, batch_size=args.batch_size, shuffle=False, pin_memory=True, num_workers=32)
+	train_queue = DataLoaderX(train_data, batch_size=args.batch_size, shuffle=True, pin_memory=True, num_workers=32)
+	valid_queue = DataLoaderX(valid_data, batch_size=args.batch_size, shuffle=False, pin_memory=True, num_workers=32)
 	
 	# criterion
 	criterion = nn.CrossEntropyLoss()
