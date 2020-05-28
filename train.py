@@ -47,6 +47,8 @@ def main():
 	args = get_args()
 	print(args)
 	
+	assert args.model in ['efficientnet_b0', 'mixnet_m', 'mobilenet_v3', 'mnasnet_a1']
+	
 	torch.cuda.set_device(args.gpu)
 	np.random.seed(args.seed)
 	cudnn.benchmark = True
