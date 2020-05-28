@@ -172,7 +172,7 @@ def train(args, epoch, device, train_queue, model, criterion, optimizer):
 	model.train()
 
 	for step, (input, target) in enumerate(train_queue):
-		inputs, targets = inputs.to(device), targets.to(device)
+		input, target = input.to(device), target.to(device)
 		
 		optimizer.zero_grad()
 		logits = model(input)
@@ -202,7 +202,7 @@ def infer(device, valid_queue, model, criterion):
 	model.eval()
 	
 	for step, (input, target) in enumerate(valid_queue):
-		inputs, targets = inputs.to(device), targets.to(device)
+		input, target = input.to(device), target.to(device)
 		
 		logits = model(input)
 		loss = criterion(logits, target)
