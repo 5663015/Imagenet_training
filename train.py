@@ -15,6 +15,8 @@ from timm_models import get_timm_models
 from sklearn import metrics
 from auto_augment import ImageNetPolicy
 from utils import *
+import warnings
+warnings.filterwarnings("ignore")
 
 
 def get_args():
@@ -147,7 +149,7 @@ def main():
 		val_loss_list.append(valid_obj)
 		
 		time2 = time.time()
-		print(' val loss: {:.6}, val acc: {:.6}, time/minutes: {:.3}'.format(valid_obj, valid_acc_top1, (time2 - time1) / 60))
+		print(' val loss: {:.6}, val acc: {:.6}, time/minutes: {:.3}\n'.format(valid_obj, valid_acc_top1, (time2 - time1) / 60))
 		print('best val acc: ', best_acc)
 	
 	# save training process
