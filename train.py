@@ -88,8 +88,8 @@ def main():
 		get_train_loader = get_dali_train_loader(dali_cpu=True)
 		get_val_loader = get_dali_val_loader()
 	
-	train_queue, train_loader_len = get_train_loader(args.data, args.batch_size, workers=8, input_size=224)
-	valid_queue, val_loader_len = get_val_loader(args.data, args.batch_size, workers=8, input_size=224)
+	train_queue, train_loader_len = get_train_loader(args.data, args.batch_size, workers=8)
+	valid_queue, val_loader_len = get_val_loader(args.data, args.batch_size, workers=8)
 	
 	# criterion
 	criterion = nn.CrossEntropyLoss()

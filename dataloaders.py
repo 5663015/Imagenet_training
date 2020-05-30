@@ -219,6 +219,7 @@ class PrefetchedWrapper(object):
         self.epoch += 1
         return PrefetchedWrapper.prefetched_loader(self.dataloader)
 
+
 def get_pytorch_train_loader(data_path, batch_size, workers=5, _worker_init_fn=None, input_size=224):
     traindir = os.path.join(data_path, 'train')
     train_dataset = datasets.ImageFolder(
