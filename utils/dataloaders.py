@@ -3,6 +3,8 @@ import torch
 import numpy as np
 import torchvision.datasets as datasets
 import torchvision.transforms as transforms
+from auto_augment import ImageNetPolicy
+
 
 DATA_BACKEND_CHOICES = ['pytorch']
 try:
@@ -225,6 +227,7 @@ def get_pytorch_train_loader(data_path, batch_size, workers=5, _worker_init_fn=N
             transforms.Compose([
                 transforms.RandomResizedCrop(input_size),
                 transforms.RandomHorizontalFlip(),
+                ImageNetPolicy(),
                 ]))
 
     if torch.distributed.is_initialized():
