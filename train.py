@@ -121,7 +121,7 @@ def main():
 		
 		model.drop_path_prob = args.drop_connect * epoch / args.epochs
 		model.drop_rate = args.dropout * epoch / args.epochs
-		train_top1, train_top5, train_loss = train(args, epoch, device, train_queue, model, criterion_smooth, optimizer)
+		train_top1, train_top5, train_loss = train(args, epoch, device, train_queue, train_loader_len, model, criterion_smooth, optimizer)
 		valid_acc_top1, valid_acc_top5, valid_obj = infer(device, valid_queue, model, criterion)
 		scheduler.step()
 		
@@ -158,7 +158,7 @@ def main():
 	torch.save(state, path)
 
 
-def train(args, epoch, device, train_queue, model, criterion, optimizer):
+def train(args, epoch, device, train_queue, train_loader_len, model, criterion, optimizer):
 	objs = AverageMeter()
 	top1 = AverageMeter()
 	top5 = AverageMeter()
@@ -186,7 +186,7 @@ def train(args, epoch, device, train_queue, model, criterion, optimizer):
 		top5.update(prec5.item(), n)
 		
 		print('\rEpoch: {}/{}, step[{}/{}], train loss: {:.3}, train top1: {:.3}, train top5: {:.3}'.format(
-			epoch + 1, args.epochs, step + 1, len(train_queue), objs.avg, top1.avg, top5.avg), end='')
+			epoch + 1, args.epochs, step + 1, train_loader_len, objs.avg, top1.avg, top5.avg), end='')
 		step += 1
 	return top1.avg, top5.avg, objs.avg
 	
