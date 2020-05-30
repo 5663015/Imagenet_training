@@ -95,7 +95,7 @@ def main():
                                 world_size=args.world_size)
 
     # create model
-    assert args.model in ['efficientnet_b0', 'mixnet_m', 'mobilenet_v3', 'mnasnet_a1']
+    assert args.arch in ['efficientnet_b0', 'mixnet_m', 'mobilenet_v3', 'mnasnet_a1']
     print("=> creating model '{}'".format(args.arch))
     model = get_timm_models(args.model, dropout=args.dropout, drop_connect=args.drop_connect, bn_momentum=args.bn_momentum)
 
