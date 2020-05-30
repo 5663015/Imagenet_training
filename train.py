@@ -13,6 +13,7 @@ from torchvision import datasets
 from thop import profile
 from timm_models import get_timm_models
 from utils import *
+from dataloaders import *
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -20,6 +21,7 @@ warnings.filterwarnings("ignore")
 def get_args():
 	parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
 	parser.add_argument('--data', type=str, default='../data/imagenet/', help='path to dataset')
+	parser.add_argument('--data-backend', metavar='BACKEND', default='dali_gpu', choices=DATA_BACKEND_CHOICES)
 	parser.add_argument('--batch_size', type=int, default=256, help='batch size')
 	parser.add_argument('--model', type=str, required=True, help='model name')
 	parser.add_argument('--learning_rate', type=float, default=0.1, help='init learning rate')
@@ -37,7 +39,6 @@ def get_args():
 	parser.add_argument('--seed', type=int, default=0, help='random seed')
 	parser.add_argument('--label_smooth', type=float, default=0.1, help='label smoothing')
 	parser.add_argument('--grad_clip', type=float, default=5., help='gradient clipping')
-	parser.add_argument('--warm_up_epochs', default=0, type=int, metavar='N', help='manual epoch number (useful on restarts)')
 	parser.add_argument('--gamma', type=float, default=0.97, help='learning rate decay')
 	parser.add_argument('--decay_period', type=int, default=3, help='epochs between two learning rate decays')
 	parser.add_argument('--bn_momentum', type=float, default=0.9, help='BatchNorm momentum override (if not None)')
@@ -77,6 +78,19 @@ def main():
 	train_queue = DataLoaderX(train_data, batch_size=args.batch_size, shuffle=True, pin_memory=True, num_workers=32)
 	valid_queue = DataLoaderX(valid_data, batch_size=args.batch_size, shuffle=False, pin_memory=True, num_workers=32)
 	
+	if args.data_backend == 'pytorch':
+		get_train_loader = get_pytorch_train_loader
+		get_val_loader = get_pytorch_val_loader
+	elif args.data_backend == 'dali_gpu':
+		get_train_loader = get_dali_train_loader(dali_cpu=False)
+		get_val_loader = get_dali_val_loader()
+	elif args.data_backend == 'dali_cpu':
+		get_train_loader = get_dali_train_loader(dali_cpu=True)
+		get_val_loader = get_dali_val_loader()
+	
+	train_queue, train_loader_len = get_train_loader(args.data, args.batch_size, workers=8, input_size=224)
+	valid_queue, val_loader_len = get_val_loader(args.data, args.batch_size, workers=8, input_size=224)
+	
 	# criterion
 	criterion = nn.CrossEntropyLoss()
 	criterion = criterion.to(device)
@@ -97,12 +111,6 @@ def main():
 	scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, args.epochs, eta_min=args.learning_rate_min)
 	# optimizer = torch.optim.RMSprop(model.parameters(), args.learning_rate, weight_decay=args.weight_decay, momentum=args.momentum, centered=False)
 	# scheduler = torch.optim.lr_scheduler.StepLR(optimizer, args.decay_period, gamma=args.gamma)
-	
-	if args.warm_up_epochs > 0:
-		warm_scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda t: t / args.warm_up_epochs)
-		for epoch in range(args.warm_up_epochs):
-			train(args, epoch, device, train_queue, model, criterion, optimizer)
-			warm_scheduler.step()
 	
 	# train
 	best_acc = 0.
