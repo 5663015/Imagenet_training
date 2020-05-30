@@ -20,7 +20,7 @@ warnings.filterwarnings("ignore")
 
 def get_args():
 	parser = argparse.ArgumentParser(description='PyTorch ImageNet Training')
-	parser.add_argument('--data', type=str, default='../data/imagenet/', help='path to dataset')
+	parser.add_argument('--data', type=str, default='/home/work/dataset/ILSVRC2012/', help='path to dataset')
 	parser.add_argument('--data-backend', metavar='BACKEND', default='dali_gpu', choices=DATA_BACKEND_CHOICES)
 	parser.add_argument('--batch_size', type=int, default=256, help='batch size')
 	parser.add_argument('--model', type=str, required=True, help='model name')
@@ -68,15 +68,15 @@ def main():
 	# dataset
 	train_transform, val_transform = Imagenet_transforms()
 	train_data = datasets.ImageFolder(root='/home/work/dataset/ILSVRC2012/train', transform=train_transform)
-	valid_data = datasets.ImageFolder(root='/home/work/dataset/ILSVRC2012/train', transform=val_transform)
+	valid_data = datasets.ImageFolder(root='/home/work/dataset/ILSVRC2012/val', transform=val_transform)
 	
 	# data queue
 	# train_queue = torch.utils.data.DataLoader(
 	# 	train_data, batch_size=args.batch_size, shuffle=True, pin_memory=True, num_workers=32)
 	# valid_queue = torch.utils.data.DataLoader(
 	# 	valid_data, batch_size=args.batch_size, shuffle=False, pin_memory=True, num_workers=32)
-	train_queue = DataLoaderX(train_data, batch_size=args.batch_size, shuffle=True, pin_memory=True, num_workers=32)
-	valid_queue = DataLoaderX(valid_data, batch_size=args.batch_size, shuffle=False, pin_memory=True, num_workers=32)
+	# train_queue = DataLoaderX(train_data, batch_size=args.batch_size, shuffle=True, pin_memory=True, num_workers=32)
+	# valid_queue = DataLoaderX(valid_data, batch_size=args.batch_size, shuffle=False, pin_memory=True, num_workers=32)
 	
 	if args.data_backend == 'pytorch':
 		get_train_loader = get_pytorch_train_loader
