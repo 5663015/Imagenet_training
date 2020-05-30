@@ -22,7 +22,6 @@ import torch.utils.data.distributed
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import torchvision.models as models
-import models.imagenet as customized_models
 from utils import Logger, AverageMeter, accuracy, mkdir_p, savefig
 from timm_models import get_timm_models
 from utils.dataloaders import *
