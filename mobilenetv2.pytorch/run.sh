@@ -1,5 +1,5 @@
 source activate torch1.0
-export CUDA_VISIBLE_DEVICES=1,2 && nohup python -u imagenet.py -a mobilenetv2 \
+export CUDA_VISIBLE_DEVICES=0 && nohup python -u imagenet.py -a mobilenetv2 \
     -b 256 \
     -d /home/work/dataset/ILSVRC2012 \
     --epochs 150 \
