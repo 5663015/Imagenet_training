@@ -97,7 +97,7 @@ def main():
     # create model
     assert args.arch in ['efficientnet_b0', 'mixnet_m', 'mobilenet_v3', 'mnasnet_a1']
     print("=> creating model '{}'".format(args.arch))
-    model = get_timm_models(args.model, dropout=args.dropout, drop_connect=args.drop_connect, bn_momentum=args.bn_momentum)
+    model = get_timm_models(args.arch, dropout=args.dropout, drop_connect=args.drop_connect, bn_momentum=args.bn_momentum)
 
     if not args.distributed:
         model = torch.nn.DataParallel(model).cuda()
