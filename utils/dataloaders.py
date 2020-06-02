@@ -116,6 +116,7 @@ class DALIWrapper(object):
     def __iter__(self):
         return DALIWrapper.gen_wrapper(self.dalipipeline)
 
+
 def get_dali_train_loader(dali_cpu=False):
     def gdtl(data_path, batch_size, workers=5, _worker_init_fn=None):
         if torch.distributed.is_initialized():
@@ -220,15 +221,17 @@ class PrefetchedWrapper(object):
         self.epoch += 1
         return PrefetchedWrapper.prefetched_loader(self.dataloader)
 
-def get_pytorch_train_loader(data_path, batch_size, workers=5, _worker_init_fn=None, input_size=224):
+
+def get_pytorch_train_loader(args, data_path, batch_size, workers=5, _worker_init_fn=None, input_size=224):
     traindir = os.path.join(data_path, 'train')
-    train_dataset = datasets.ImageFolder(
-            traindir,
-            transforms.Compose([
+    train_transforms = transforms.Compose([
                 transforms.RandomResizedCrop(input_size),
                 transforms.RandomHorizontalFlip(),
-                ImageNetPolicy(),
-                ]))
+                ])
+    if args.aa:
+        train_transforms.append(ImageNetPolicy())
+    
+    train_dataset = datasets.ImageFolder(traindir, train_transforms)
 
     if torch.distributed.is_initialized():
         train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset)
@@ -240,6 +243,7 @@ def get_pytorch_train_loader(data_path, batch_size, workers=5, _worker_init_fn=N
             num_workers=workers, worker_init_fn=_worker_init_fn, pin_memory=True, sampler=train_sampler, collate_fn=fast_collate)
 
     return PrefetchedWrapper(train_loader), len(train_loader)
+
 
 def get_pytorch_val_loader(data_path, batch_size, workers=5, _worker_init_fn=None, input_size=224):
     valdir = os.path.join(data_path, 'val')

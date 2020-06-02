@@ -47,6 +47,7 @@ parser.add_argument('--bn_momentum', type=float, default=0.9, help='BatchNorm mo
 parser.add_argument('--momentum', default=0.9, type=float, metavar='M', help='momentum')
 parser.add_argument('--weight_decay', default=1e-4, type=float,metavar='W',
                     help='weight decay (default: 1e-4)', dest='weight_decay')
+parser.add_argument('--aa', action='store_true', default=False, help='auto augment')
 parser.add_argument('--dropout', type=float, default=0.2, help='drop path probability')
 parser.add_argument('--drop_connect', type=float, default=0.2, help='drop path probability')
 parser.add_argument('--print_freq', default=1, type=int, metavar='N', help='print frequency (default: 1)')
@@ -128,8 +129,8 @@ def main():
     elif args.data_backend == 'dali_cpu':
         get_train_loader = get_dali_train_loader(dali_cpu=True)
         get_val_loader = get_dali_val_loader()
-
-    train_loader, train_loader_len = get_train_loader(args.data, args.batch_size, workers=args.workers,
+    
+    train_loader, train_loader_len = get_train_loader(args, args.data, args.batch_size, workers=args.workers,
                                                       input_size=args.input_size)
     val_loader, val_loader_len = get_val_loader(args.data, args.batch_size, workers=args.workers,
                                                 input_size=args.input_size)
