@@ -72,10 +72,6 @@ best_prec1 = 0
 
 
 def main():
-    # prepare dir
-    if not os.path.exists('./logdir'):
-        os.mkdir('./logdir')
-
     global args, best_prec1
     args = parser.parse_args()
 
