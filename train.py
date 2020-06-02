@@ -133,7 +133,7 @@ def main():
 
     # visualization
     writer = SummaryWriter(os.path.join(args.checkpoint, '{}_logs'.format(args.arch)))
-
+    start_time = time.time()
     for epoch in range(args.start_epoch, args.epochs):
         t1 = time.time()
 
@@ -174,9 +174,10 @@ def main():
     logger.plot()
     savefig(os.path.join(args.checkpoint, '{}_log.eps'.format(args.arch)))
     writer.close()
-
-    print('Best accuracy:')
-    print(best_prec1)
+    
+    end_time = time.time()
+    print('Best accuracy: ', best_prec1)
+    print('Running time/hours: ', (end_time - start_time) / 3600)
 
 
 def train(train_loader, train_loader_len, model, criterion, optimizer, epoch):
