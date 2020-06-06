@@ -4,8 +4,13 @@
 ```
 export CUDA_VISIBLE_DEVICES=6,7 && nohup python -u train.py \
 	--arch model_name \
+	--data_backend pytorch \
+	--epochs 150 \
+	--batch_size 256 \
 	--lr 0.05 \
 	--weight_decay 4e-5 \
+	--dropout 0.2 \
+	--drop_connect 0.2 \
 	--checkpoint your_path > xx.log 2>&1 &
 ```
 
